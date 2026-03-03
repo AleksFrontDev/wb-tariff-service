@@ -108,7 +108,6 @@ docker exec -it postgres psql -U postgres -d postgres -c "DELETE FROM spreadshee
   4. Добавить email сервисного аккаунта в редакторы таблицы
   5. Создать лист с именем `stocks_coefs` в Google Таблице
   6. Добавить ID таблицы в БД через `INSERT INTO spreadsheets (spreadsheet_id) VALUES ('твой_id');`
-- Токен WB API выдан на hh.ru после подтверждения готовности выполнить задание.
 
 ---
 
