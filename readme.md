@@ -1,4 +1,3 @@
-```markdown
 # wb-tariff-service
 
 Сервис для автоматического сбора тарифов Wildberries (короба) с последующей выгрузкой в Google Таблицы. Работает в Docker, использует PostgreSQL и Knex.js.
@@ -6,7 +5,6 @@
 ## Быстрый старт
 
 ### 1. Подготовка
-```bash
 # Клонировать репозиторий
 git clone <your-repo>
 cd btlz-test
@@ -17,27 +15,20 @@ cp .env.example .env
 # - WB_API_TOKEN
 # - GOOGLE_SERVICE_ACCOUNT_EMAIL
 # - GOOGLE_PRIVATE_KEY
-```
 
 ### 2. Первый запуск (сборка образа)
-```bash
 docker compose up --build
-```
 При первом запуске произойдет сборка Docker образа, создание таблиц в БД и запуск приложения.
 
 ### 3. Последующие запуски
-```bash
 docker compose up
-```
 Когда образ уже собран, можно запускать без флага `--build`.
 
 ## Добавление Google таблиц для выгрузки
 
 После запуска добавьте ID таблиц в БД:
 
-```bash
 docker exec -it postgres psql -U postgres -d postgres -c "INSERT INTO spreadsheets (spreadsheet_id) VALUES ('ваш_id_google_таблицы');"
-```
 
 ## Проверка работы
 
@@ -61,23 +52,16 @@ docker exec -it postgres psql -U postgres -d postgres -c "INSERT INTO spreadshee
 ## Команды
 
 ### Запуск базы данных отдельно
-```bash
 docker compose up -d postgres
-```
 
 ### Миграции и сиды (локально, без Docker)
-```bash
 npm run knex:dev migrate latest
 npm run knex:dev seed run
-```
 
 ### Запуск приложения в режиме разработки (локально)
-```bash
 npm run dev
-```
 
 ### Docker команды
-```bash
 # Сборка и запуск (первый раз)
 docker compose up --build
 
@@ -93,7 +77,6 @@ docker compose logs -f app
 # Полная пересборка (очистка и сборка заново)
 docker compose down --rmi local --volumes
 docker compose up --build
-```
 
 ## 🚀 Реализованный функционал
 
@@ -130,24 +113,16 @@ docker compose up --build
 ## 🔧 Дополнительные команды
 
 ### Ручной запуск обновления Google Таблиц
-```bash
 docker exec -it app sh -c "node -e 'import(\"./dist/services/googleSheets.service.js\").then(m => m.updateAllSheets())'"
-```
 
 ### Подключение к базе данных
-```bash
 docker exec -it postgres psql -U postgres -d postgres
-```
 
 ### Просмотр данных в базе
-```bash
 docker exec -it postgres psql -U postgres -d postgres -c "SELECT * FROM box_tariffs ORDER BY created_at DESC LIMIT 10;"
-```
 
 ### Удаление таблицы с ID (если ошиблись)
-```bash
 docker exec -it postgres psql -U postgres -d postgres -c "DELETE FROM spreadsheets WHERE spreadsheet_id = 'неправильный_id';"
-```
 
 ## 📌 Примечания
 
