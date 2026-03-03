@@ -1,7 +1,7 @@
 {
     "name": "btlz-test",
     "version": "1.0.0",
-    "description": "your description",
+    "description": "Сервис для сбора тарифов Wildberries и выгрузки в Google Таблицы",
     "main": "app.js",
     "type": "module",
     "scripts": {
@@ -15,7 +15,13 @@
         "prettier": "prettier --config .prettierrc.json src/**/*.js --check",
         "prettier-format": "prettier --config .prettierrc.json src/**/*.js --write",
         "eslint": "eslint",
-        "eslint-fix": "eslint --fix"
+        "eslint-fix": "eslint --fix",
+        "migrate:latest": "knex migrate:latest --knexfile dist/config/knex/knexfile.js",
+        "migrate:rollback": "knex migrate:rollback --knexfile dist/config/knex/knexfile.js",
+        "docker:up": "docker compose up",
+        "docker:down": "docker compose down",
+        "docker:logs": "docker compose logs -f",
+        "docker:psql": "docker exec -it postgres psql -U postgres -d postgres"
     },
     "imports": {
         "#*": [
@@ -26,7 +32,7 @@
     "_moduleAliases": {
         "#": "src"
     },
-    "author": "lucard17",
+    "author": "Aleksandr Generalov",
     "license": "ISC",
     "dependencies": {
         "commander": "^13.1.0",
@@ -51,6 +57,7 @@
         "@types/jest": "^29.5.11",
         "@types/jsonwebtoken": "^9.0.8",
         "@types/knex": "^0.16.1",
+        "@types/node-cron": "^3.0.11",
         "@types/pg": "^8.11.10",
         "@types/uuid": "^10.0.0",
         "babel-jest": "^29.7.0",

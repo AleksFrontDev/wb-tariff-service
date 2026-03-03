@@ -22,3 +22,5 @@ WORKDIR /app
 COPY --from=build /app/package*.json .
 COPY --from=deps-prod /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+
+CMD ["sh", "-c", "npm run migrate:latest && npm start"]

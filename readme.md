@@ -1,11 +1,54 @@
+```markdown
 # wb-tariff-service
 
 Сервис для автоматического сбора тарифов Wildberries (короба) с последующей выгрузкой в Google Таблицы. Работает в Docker, использует PostgreSQL и Knex.js.
 
+## Быстрый старт
+
+### 1. Подготовка
+```bash
+# Клонировать репозиторий
+git clone <your-repo>
+cd btlz-test
+
+# Создать файл с переменными окружения
+cp .env.example .env
+# Отредактируйте .env, добавьте:
+# - WB_API_TOKEN
+# - GOOGLE_SERVICE_ACCOUNT_EMAIL
+# - GOOGLE_PRIVATE_KEY
+```
+
+### 2. Первый запуск (сборка образа)
+```bash
+docker compose up --build
+```
+При первом запуске произойдет сборка Docker образа, создание таблиц в БД и запуск приложения.
+
+### 3. Последующие запуски
+```bash
+docker compose up
+```
+Когда образ уже собран, можно запускать без флага `--build`.
+
+## Добавление Google таблиц для выгрузки
+
+После запуска добавьте ID таблиц в БД:
+
+```bash
+docker exec -it postgres psql -U postgres -d postgres -c "INSERT INTO spreadsheets (spreadsheet_id) VALUES ('ваш_id_google_таблицы');"
+```
+
+## Проверка работы
+
+- **Логи приложения:** `docker compose logs -f app`
+- **Данные в БД:** `docker exec -it postgres psql -U postgres -d postgres -c "SELECT * FROM box_tariffs LIMIT 10;"`
+- **Ручное обновление таблиц:** `docker exec app node -e "import('./dist/services/googleSheets.service.js').then(m => new m.GoogleSheetsService().updateAllSheets())"`
+
 ## Описание
 В шаблоне настроены контейнеры для postgres и приложения на nodejs.
 Для взаимодействия с БД используется knex.js.
-В контейнере app используется build для приложения на ts, но можно использовать и js.
+В контейнере app используется build для приложения на ts.
 
 Все настройки можно найти в файлах:
 - compose.yaml
@@ -17,31 +60,37 @@
 
 ## Команды
 
-### Запуск базы данных
+### Запуск базы данных отдельно
 ```bash
-docker compose up -d --build postgres
+docker compose up -d postgres
 ```
 
-### Миграции и сиды (локально)
+### Миграции и сиды (локально, без Docker)
 ```bash
 npm run knex:dev migrate latest
 npm run knex:dev seed run
 ```
 
-Также можно использовать и остальные команды (`migrate make <name>`, `migrate up`, `migrate down` и т.д.)
-
-### Запуск приложения в режиме разработки
+### Запуск приложения в режиме разработки (локально)
 ```bash
 npm run dev
 ```
 
-### Запуск приложения в контейнере
+### Docker команды
 ```bash
-docker compose up -d --build app
-```
+# Сборка и запуск (первый раз)
+docker compose up --build
 
-### Полная пересборка и запуск
-```bash
+# Запуск (последующие разы)
+docker compose up
+
+# Остановка
+docker compose down
+
+# Просмотр логов
+docker compose logs -f app
+
+# Полная пересборка (очистка и сборка заново)
 docker compose down --rmi local --volumes
 docker compose up --build
 ```
@@ -70,17 +119,13 @@ docker compose up --build
 
 ### Docker
 - Полная контейнеризация приложения и базы данных
-- Запуск одной командой: `docker compose up --build`
+- Автоматическое выполнение миграций при запуске
 
 ### Переменные окружения
 - Поддержка `.env` файла для всех секретов:
   - `WB_API_TOKEN` — токен Wildberries
   - `GOOGLE_SERVICE_ACCOUNT_EMAIL` — email сервисного аккаунта
   - `GOOGLE_PRIVATE_KEY` — приватный ключ для доступа к Google Sheets
-
-### Проверка работы
-- Логирование всех ключевых этапов
-- Ручной запуск обновления таблиц через Node.js
 
 ## 🔧 Дополнительные команды
 
@@ -89,25 +134,34 @@ docker compose up --build
 docker exec -it app sh -c "node -e 'import(\"./dist/services/googleSheets.service.js\").then(m => m.updateAllSheets())'"
 ```
 
-### Просмотр данных в базе
+### Подключение к базе данных
 ```bash
-docker exec -it postgres psql -U postgres -d postgres -c "SELECT * FROM box_tariffs;"
+docker exec -it postgres psql -U postgres -d postgres
 ```
 
-### Очистка фейковых ID таблиц (если есть `some_spreadsheet`)
+### Просмотр данных в базе
 ```bash
-docker exec -it postgres psql -U postgres -d postgres -c "DELETE FROM spreadsheets WHERE spreadsheet_id = 'some_spreadsheet';"
+docker exec -it postgres psql -U postgres -d postgres -c "SELECT * FROM box_tariffs ORDER BY created_at DESC LIMIT 10;"
+```
+
+### Удаление таблицы с ID (если ошиблись)
+```bash
+docker exec -it postgres psql -U postgres -d postgres -c "DELETE FROM spreadsheets WHERE spreadsheet_id = 'неправильный_id';"
 ```
 
 ## 📌 Примечания
 
 - Для работы Google Sheets необходимо:
-  1. Создать сервисный аккаунт в Google Cloud Console
+  1. Создать сервисный аккаунт в [Google Cloud Console](https://console.cloud.google.com/)
   2. Включить Google Sheets API
   3. Скачать JSON-ключ и добавить `GOOGLE_SERVICE_ACCOUNT_EMAIL` и `GOOGLE_PRIVATE_KEY` в `.env`
   4. Добавить email сервисного аккаунта в редакторы таблицы
   5. Создать лист с именем `stocks_coefs` в Google Таблице
-  6. Добавить ID таблицы в БД через `INSERT INTO spreadsheets (spreadsheet_id) VALUES ('твой_id');`
+  6. Добавить ID таблицы в БД (команда выше)
+
+- ID Google таблицы можно найти в URL: `https://docs.google.com/spreadsheets/d/THIS_IS_ID/edit`
+
+- При первом запуске обязательно используйте `--build`, при последующих можно просто `docker compose up`
 
 ---
 
